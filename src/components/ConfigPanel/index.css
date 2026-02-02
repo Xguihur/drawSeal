@@ -1,0 +1,43 @@
+.config-panel {
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+.config-card {
+  margin-bottom: 16px;
+}
+
+.config-card:last-child {
+  margin-bottom: 0;
+}
+
+.config-card .ant-card-head {
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+.config-card .ant-card-head-title {
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+.config-card .ant-card-body {
+  padding: 12px;
+}
+
+.config-card .ant-form-item {
+  margin-bottom: 12px;
+}
+
+.config-card .ant-form-item:last-child {
+  margin-bottom: 0;
+}
+
+.config-card .ant-form-item-label {
+  padding-bottom: 4px;
+}
+
+.config-card .ant-form-item-label > label {
+  font-size: 12px;
+  color: #666;
+}
