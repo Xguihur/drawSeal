@@ -34,7 +34,7 @@ function getStarPoints(outerRadius, innerRadius, centerX, centerY) {
  * @returns {fabric.Polygon} 五角星对象
  */
 function createStar(options) {
-  const { size, color, centerX, centerY } = options
+  const { size, color, centerX, centerY, rotation = 0 } = options
   const outerRadius = size / 2
   const innerRadius = outerRadius * 0.382 // 黄金比例
   const points = getStarPoints(outerRadius, innerRadius, 0, 0)
@@ -45,6 +45,7 @@ function createStar(options) {
     fill: color,
     originX: 'center',
     originY: 'center',
+    angle: rotation,
     selectable: false,
     evented: false,
   })
@@ -155,6 +156,7 @@ export function generateSeal(canvas, config) {
     bottomFontSize,
     centerType,
     starSize,
+    starRotation,
     centerText,
     centerFontSize,
   } = config
@@ -179,26 +181,27 @@ export function generateSeal(canvas, config) {
   canvas.add(outerCircle)
 
   // 2. 绘制内圈边框（可选，公章通常有内圈）
-  const innerCircle = new fabric.Circle({
-    left: centerX,
-    top: centerY,
-    radius: radius - 14,
-    fill: 'transparent',
-    stroke: color,
-    strokeWidth: 1,
-    originX: 'center',
-    originY: 'center',
-    selectable: false,
-    evented: false,
-  })
-  canvas.add(innerCircle)
+  // const innerCircle = new fabric.Circle({
+  //   left: centerX,
+  //   top: centerY,
+  //   radius: radius - 14,
+  //   fill: 'transparent',
+  //   stroke: color,
+  //   strokeWidth: 1,
+  //   originX: 'center',
+  //   originY: 'center',
+  //   selectable: false,
+  //   evented: false,
+  // })
+  // canvas.add(innerCircle)
 
   // 3. 绘制公司名称（弧形文字）
   drawCircularText(canvas, {
     text: companyName,
     centerX,
     centerY,
-    radius: radius - 28,
+    radius: radius - 20,
+    // radius: radius - 28,
     startAngle: companyStartAngle,
     endAngle: companyEndAngle,
     fontSize: companyFontSize,
@@ -214,6 +217,7 @@ export function generateSeal(canvas, config) {
       color,
       centerX,
       centerY,
+      rotation: starRotation || 0,
     })
     canvas.add(star)
   } else if (centerType === 'text') {

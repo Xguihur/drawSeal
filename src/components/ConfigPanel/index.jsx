@@ -93,7 +93,7 @@ function ConfigPanel({ config, onChange }) {
 
           <Form.Item label="文字起始角度">
             <Slider
-              min={180}
+              min={120}
               max={270}
               value={config.companyStartAngle}
               onChange={(v) => handleChange('companyStartAngle', v)}
@@ -103,7 +103,7 @@ function ConfigPanel({ config, onChange }) {
           <Form.Item label="文字结束角度">
             <Slider
               min={270}
-              max={360}
+              max={420}
               value={config.companyEndAngle}
               onChange={(v) => handleChange('companyEndAngle', v)}
             />
@@ -122,14 +122,24 @@ function ConfigPanel({ config, onChange }) {
           </Form.Item>
 
           {config.centerType === 'star' && (
-            <Form.Item label="五角星大小">
-              <Slider
-                min={15}
-                max={80}
-                value={config.starSize}
-                onChange={(v) => handleChange('starSize', v)}
-              />
-            </Form.Item>
+            <>
+              <Form.Item label="五角星大小">
+                <Slider
+                  min={15}
+                  max={80}
+                  value={config.starSize}
+                  onChange={(v) => handleChange('starSize', v)}
+                />
+              </Form.Item>
+              <Form.Item label="五角星旋转角度">
+                <Slider
+                  min={0}
+                  max={360}
+                  value={config.starRotation || 0}
+                  onChange={(v) => handleChange('starRotation', v)}
+                />
+              </Form.Item>
+            </>
           )}
 
           {config.centerType === 'text' && (

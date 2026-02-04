@@ -27,6 +27,7 @@ export const DEFAULT_SEAL_CONFIG = {
   // 中心图案
   centerType: 'star', // 'star' 五角星 | 'text' 文字
   starSize: 35, // 五角星大小
+  starRotation: 0, // 五角星旋转角度
   centerText: '印', // 中心文字（如果选择文字类型）
   centerFontSize: 40, // 中心文字大小
 
