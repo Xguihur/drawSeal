@@ -1,4 +1,5 @@
 import express from 'express';
+import archiver from 'archiver';
 import { generateSeal, generateSealBase64 } from './sealGenerator.js';
 
 const app = express();
@@ -128,21 +129,32 @@ app.post('/api/seal', (req, res) => {
 
 /**
  * POST /api/seal/download
- * 通过 JSON Body 生成印章，直接下载 PNG 文件
+ * 通过 JSON Body 批量生成印章，打包成 ZIP 下载
+ *
+ * Request Body:
+ * {
+ *   "names": ["公司A", "公司B", "公司C"],  // 必填，印章名称数组
+ *   "fontSize": 36,        // 可选
+ *   "size": 300,           // 可选
+ *   "color": "#f03618",    // 可选
+ *   "borderWidth": 6,      // 可选
+ *   "starSize": 50         // 可选
+ * }
  */
 app.post('/api/seal/download', (req, res) => {
   try {
-    const { name, fontSize, size, color, borderWidth, starSize, filename } = req.body;
+    const { names, fontSize, size, color, borderWidth, starSize } = req.body;
 
-    if (!name) {
+    // 验证 names 参数
+    if (!names || !Array.isArray(names) || names.length === 0) {
       return res.status(400).json({
         success: false,
-        error: '缺少必填参数: name (印章名称)'
+        error: '缺少必填参数: names (印章名称数组)，且必须是非空数组'
       });
     }
 
-    const options = {
-      name,
+    // 基础配置选项（不包含 name）
+    const baseOptions = {
       fontSize,
       size,
       color,
@@ -151,21 +163,51 @@ app.post('/api/seal/download', (req, res) => {
     };
 
     // 过滤掉 undefined 和 null 值
-    Object.keys(options).forEach(key => {
-      if (options[key] === undefined || options[key] === null) {
-        delete options[key];
+    Object.keys(baseOptions).forEach(key => {
+      if (baseOptions[key] === undefined || baseOptions[key] === null) {
+        delete baseOptions[key];
       }
     });
 
-    const buffer = generateSeal(options);
-    const downloadFilename = filename || `seal_${Date.now()}.png`;
+    // 创建 zip 文件
+    const archive = archiver('zip', {
+      zlib: { level: 9 } // 最高压缩级别
+    });
 
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadFilename)}"`);
-    res.send(buffer);
+    // 设置响应头
+    const timestamp = Date.now();
+    const zipFilename = `批量生成章_${timestamp}.zip`;
+    
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(zipFilename)}"`);
+
+    // 将 archive 流导入响应
+    archive.pipe(res);
+
+    // 处理 archive 错误
+    archive.on('error', (err) => {
+      console.error('打包失败:', err);
+      throw err;
+    });
+
+    // 批量生成印章并添加到 zip
+    for (const name of names) {
+      const options = {
+        ...baseOptions,
+        name
+      };
+      
+      const buffer = generateSeal(options);
+      const filename = `${name}.png`;
+      
+      archive.append(buffer, { name: filename });
+    }
+
+    // 完成打包
+    archive.finalize();
 
   } catch (error) {
-    console.error('生成印章失败:', error);
+    console.error('批量生成印章失败:', error);
     res.status(500).json({
       success: false,
       error: error.message
