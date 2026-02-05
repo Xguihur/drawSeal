@@ -58,7 +58,7 @@ function drawStar(ctx, cx, cy, outerRadius, color) {
  */
 function calculateArcParams(charCount, baseFontSize) {
   // 配置参数
-  const CHAR_ARC_DEGREE = 25; // 每个字符理想占用的角度（度）
+  const CHAR_ARC_DEGREE = 26; // 每个字符理想占用的角度（度）
   const MIN_ARC_DEGREE = 120; // 最小弧度（度）
   const MAX_ARC_DEGREE = 260; // 最大弧度（度）
   const BASE_CHAR_COUNT = 12; // 基准字数，超过此值开始缩小字体
