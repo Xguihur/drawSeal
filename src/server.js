@@ -227,10 +227,7 @@ app.listen(PORT, () => {
 ║  • GET  /health           - 健康检查            ║
 ║  • GET  /api/seal         - 生成印章 (返回图片)  ║
 ║  • POST /api/seal         - 生成印章 (返回Base64)║
-║  • POST /api/seal/download - 下载印章           ║
-╠════════════════════════════════════════════════╣
-║  示例:                                          ║
-║  GET /api/seal?name=某某公司&fontSize=36        ║
+║  • POST /api/seal/download - 批量下载印章           ║
 ╚════════════════════════════════════════════════╝
   `);
 });
