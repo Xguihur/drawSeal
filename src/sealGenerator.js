@@ -58,20 +58,15 @@ function drawStar(ctx, cx, cy, outerRadius, color) {
  */
 function calculateArcParams(charCount, baseFontSize) {
   // 配置参数
-  const CHAR_ARC_DEGREE = 26; // 每个字符理想占用的角度（度）
-  const MIN_ARC_DEGREE = 120; // 最小弧度（度）
-  const MAX_ARC_DEGREE = 260; // 最大弧度（度）
+  const FIXED_ARC_DEGREE = 260; // 固定弧度（度）
   const BASE_CHAR_COUNT = 12; // 基准字数，超过此值开始缩小字体
   const MIN_FONT_SCALE = 0.6; // 最小字体缩放比例
 
   // 转换为弧度
   const toRadian = (degree) => (degree * Math.PI) / 180;
 
-  // 1. 计算理想弧度
-  let idealArcDegree = charCount > 1 ? (charCount - 1) * CHAR_ARC_DEGREE : CHAR_ARC_DEGREE;
-
-  // 2. 限制弧度范围
-  let actualArcDegree = Math.max(MIN_ARC_DEGREE, Math.min(MAX_ARC_DEGREE, idealArcDegree));
+  // 使用固定弧度
+  let actualArcDegree = FIXED_ARC_DEGREE;
 
   // 3. 计算字体缩放
   let fontScale = 1;
