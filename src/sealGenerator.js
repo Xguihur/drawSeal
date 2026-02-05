@@ -7,8 +7,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 注册字体（使用 node-canvas 的 Cairo 引擎，对老字体兼容性更好）
-const fontPath = path.join(__dirname, '../font/长城大标宋体.TTF');
-const FONT_FAMILY = 'ChangChengDaBiaoSong';
+
+// 新字体：方正大标宋简体
+const fontPath = path.join(__dirname, '../font/方正大标宋简体.TTF');
+const FONT_FAMILY = 'FangZhengDaBiaoSongJianTi';
 
 if (!fs.existsSync(fontPath)) {
 } else {
@@ -133,6 +135,8 @@ function drawTextOnArc(ctx, text, cx, cy, radius, fontSize, color) {
     ctx.translate(x, y);
     // 旋转文字，使其垂直于半径方向（指向圆心）
     ctx.rotate(angle + Math.PI / 2);
+    // 字高拉伸为 155%
+    ctx.scale(1, 1.55);
     ctx.fillText(char, 0, 0);
     ctx.restore();
   });
@@ -155,6 +159,7 @@ export function generateSeal(options) {
     fontSize = 36,
     size = 300,
     color = '#f03618',
+    // color = '#f03618',
     // color = '#e53935',
     // color = '#CC0000',
     borderWidth = 6,
@@ -191,7 +196,7 @@ export function generateSeal(options) {
   
   // 3. 绘制环形文字
   // 文字半径略小于边框，留出内边距
-  const textRadius = radius - fontSize * 0.8;
+  const textRadius = radius - fontSize * 1;
   const scaledFontSize = fontSize;
   drawTextOnArc(ctx, name, cx, cy, textRadius, scaledFontSize, color);
   
