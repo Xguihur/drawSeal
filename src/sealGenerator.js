@@ -11,11 +11,9 @@ const fontPath = path.join(__dirname, '../font/长城大标宋体.TTF');
 const FONT_FAMILY = 'ChangChengDaBiaoSong';
 
 if (!fs.existsSync(fontPath)) {
-  console.error('字体文件不存在:', fontPath);
 } else {
   try {
     registerFont(fontPath, { family: FONT_FAMILY });
-    console.log('字体注册成功:', FONT_FAMILY);
   } catch (err) {
     console.error('字体注册失败:', err.message);
   }
@@ -53,6 +51,50 @@ function drawStar(ctx, cx, cy, outerRadius, color) {
 }
 
 /**
+ * 计算文字弧度和字体大小
+ * @param {number} charCount - 字符数量
+ * @param {number} baseFontSize - 基准字体大小
+ * @returns {Object} { totalArc, fontSize, startAngle }
+ */
+function calculateArcParams(charCount, baseFontSize) {
+  // 配置参数
+  const CHAR_ARC_DEGREE = 25; // 每个字符理想占用的角度（度）
+  const MIN_ARC_DEGREE = 120; // 最小弧度（度）
+  const MAX_ARC_DEGREE = 260; // 最大弧度（度）
+  const BASE_CHAR_COUNT = 12; // 基准字数，超过此值开始缩小字体
+  const MIN_FONT_SCALE = 0.6; // 最小字体缩放比例
+  
+  // 转换为弧度
+  const toRadian = (degree) => (degree * Math.PI) / 180;
+  
+  // 1. 计算理想弧度
+  let idealArcDegree = charCount > 1 ? (charCount - 1) * CHAR_ARC_DEGREE : CHAR_ARC_DEGREE;
+  
+  // 2. 限制弧度范围
+  let actualArcDegree = Math.max(MIN_ARC_DEGREE, Math.min(MAX_ARC_DEGREE, idealArcDegree));
+  
+  // 3. 计算字体缩放
+  let fontScale = 1;
+  if (charCount > BASE_CHAR_COUNT) {
+    // 超过基准字数，字体按比例缩小
+    fontScale = BASE_CHAR_COUNT / charCount;
+    // 限制最小缩放比例
+    fontScale = Math.max(MIN_FONT_SCALE, fontScale);
+  }
+  
+  // 4. 计算起始角度（使文字居中对称分布在顶部）
+  // 弧度的中心点在顶部（-90度 = -PI/2）
+  const totalArc = toRadian(actualArcDegree);
+  const startAngle = -Math.PI / 2 - totalArc / 2; // 从左侧开始
+  
+  return {
+    totalArc,
+    fontSize: baseFontSize * fontScale,
+    startAngle,
+  };
+}
+
+/**
  * 沿圆弧绘制文字
  * @param {CanvasRenderingContext2D} ctx - Canvas 上下文
  * @param {string} text - 文字内容
@@ -68,15 +110,13 @@ function drawTextOnArc(ctx, text, cx, cy, radius, fontSize, color) {
   
   if (charCount === 0) return;
   
-  ctx.font = `${fontSize}px "${FONT_FAMILY}"`;
+  // 动态计算弧度和字体大小
+  const { totalArc, fontSize: adjustedFontSize, startAngle } = calculateArcParams(charCount, fontSize);
+  
+  ctx.font = `${adjustedFontSize}px "${FONT_FAMILY}"`;
   ctx.fillStyle = color;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  
-  // 计算文字占据的弧度，留出底部空白
-  // 文字从左上方开始，到右上方结束，底部留空给五角星下方区域
-  const totalArc = Math.PI * 1.4; // 约 252 度
-  const startAngle = Math.PI * 0.8; // 从左下方开始（约 144 度）
   
   // 字符间的角度间隔
   const angleStep = charCount > 1 ? totalArc / (charCount - 1) : 0;
@@ -114,7 +154,9 @@ export function generateSeal(options) {
     name,
     fontSize = 36,
     size = 300,
-    color = '#CC0000',
+    color = '#f03618',
+    // color = '#e53935',
+    // color = '#CC0000',
     borderWidth = 6,
     starSize = 50,
   } = options;
