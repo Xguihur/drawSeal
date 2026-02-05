@@ -6,20 +6,27 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 注册字体
-const fontPath = path.join(__dirname, '../font/长城大标宋体.TTF');
+// // 注册字体（暂时注释，使用系统字体测试）
+// const fontPath = path.join(__dirname, '../font/长城大标宋体.TTF');
 
-// 检查字体文件是否存在
-if (!fs.existsSync(fontPath)) {
-  console.error('字体文件不存在:', fontPath);
-} else {
-  const registered = GlobalFonts.registerFromPath(fontPath, 'ChangChengDaBiaoSong');
-  if (registered) {
-    console.log('字体注册成功: ChangChengDaBiaoSong');
-  } else {
-    console.error('字体注册失败');
-  }
-}
+// // 检查字体文件是否存在
+// if (!fs.existsSync(fontPath)) {
+//   console.error('字体文件不存在:', fontPath);
+// } else {
+//   const registered = GlobalFonts.registerFromPath(fontPath, 'ChangChengDaBiaoSong');
+//   if (registered) {
+//     console.log('字体注册成功: ChangChengDaBiaoSong');
+//     // 打印所有已注册字体的 family 名称，便于调试
+//     const families = GlobalFonts.families;
+//     const changcheng = families.find(f => f.family.includes('ChangCheng') || f.family.includes('长城'));
+//     console.log('找到的长城字体:', changcheng);
+//   } else {
+//     console.error('字体注册失败');
+//   }
+// }
+
+// 使用系统中文字体
+const FONT_FAMILY = 'Heiti TC';
 
 /**
  * 绘制五角星
@@ -68,7 +75,7 @@ function drawTextOnArc(ctx, text, cx, cy, radius, fontSize, color) {
   
   if (charCount === 0) return;
   
-  ctx.font = `${fontSize}px "ChangChengDaBiaoSong"`;
+  ctx.font = `${fontSize}px "${FONT_FAMILY}"`;
   ctx.fillStyle = color;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
