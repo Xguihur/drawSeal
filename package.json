@@ -1,5 +1,5 @@
 {
-  "name": "print-seal",
+  "name": "generate-seal",
   "version": "1.0.0",
   "description": "印章生成器 API 服务",
   "main": "src/server.js",
