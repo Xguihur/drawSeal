@@ -1,0 +1,39 @@
+# 依赖目录
+node_modules
+
+# Git
+.git
+.gitignore
+
+# 文档
+.docs
+README.md
+*.md
+
+# IDE
+.idea
+.vscode
+.cursor
+*.swp
+*.swo
+
+# 日志
+logs
+*.log
+npm-debug.log*
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# Docker 文件（避免循环）
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# 测试和开发文件
+test
+tests
+*.test.js
+*.spec.js
+coverage

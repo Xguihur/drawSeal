@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  generate-seal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: generate-seal
+    restart: unless-stopped
+    ports:
+      - "3301:3301"
+    environment:
+      - NODE_ENV=production
+      - PORT=3301
+    # 如需挂载自定义字体，取消下方注释
+    # volumes:
+    #   - ./font:/app/font:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3301/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# 如需使用外部网络，取消下方注释
+# networks:
+#   default:
+#     external:
+#       name: your-network
