@@ -20,7 +20,7 @@ app.get('/health', (req, res) => {
  * - name: 印章名称（必填）
  * - fontSize: 字号（可选，默认 36）
  * - size: 印章尺寸（可选，默认 300）
- * - color: 颜色（可选，默认 #CC0000）
+ * - color: 颜色（可选，默认 #f03618）
  * - borderWidth: 边框宽度（可选，默认 6）
  * - starSize: 五角星大小（可选，默认 50）
  */
@@ -69,13 +69,13 @@ app.get('/api/seal', (req, res) => {
 /**
  * POST /api/seal
  * 通过 JSON Body 生成印章，返回 Base64 编码的图片
- * 
+ *
  * Request Body:
  * {
  *   "name": "公司名称",    // 必填
  *   "fontSize": 36,        // 可选
  *   "size": 300,           // 可选
- *   "color": "#CC0000",    // 可选
+  *   "color": "#f03618",    // 可选
  *   "borderWidth": 6,      // 可选
  *   "starSize": 50         // 可选
  * }
@@ -83,14 +83,14 @@ app.get('/api/seal', (req, res) => {
 app.post('/api/seal', (req, res) => {
   try {
     const { name, fontSize, size, color, borderWidth, starSize } = req.body;
-    
+
     if (!name) {
       return res.status(400).json({
         success: false,
         error: '缺少必填参数: name (印章名称)'
       });
     }
-    
+
     const options = {
       name,
       fontSize,
@@ -99,16 +99,16 @@ app.post('/api/seal', (req, res) => {
       borderWidth,
       starSize,
     };
-    
+
     // 过滤掉 undefined 和 null 值
     Object.keys(options).forEach(key => {
       if (options[key] === undefined || options[key] === null) {
         delete options[key];
       }
     });
-    
+
     const base64 = generateSealBase64(options);
-    
+
     res.json({
       success: true,
       data: {
@@ -116,7 +116,7 @@ app.post('/api/seal', (req, res) => {
         config: options
       }
     });
-    
+
   } catch (error) {
     console.error('生成印章失败:', error);
     res.status(500).json({
@@ -133,14 +133,14 @@ app.post('/api/seal', (req, res) => {
 app.post('/api/seal/download', (req, res) => {
   try {
     const { name, fontSize, size, color, borderWidth, starSize, filename } = req.body;
-    
+
     if (!name) {
       return res.status(400).json({
         success: false,
         error: '缺少必填参数: name (印章名称)'
       });
     }
-    
+
     const options = {
       name,
       fontSize,
@@ -149,21 +149,21 @@ app.post('/api/seal/download', (req, res) => {
       borderWidth,
       starSize,
     };
-    
+
     // 过滤掉 undefined 和 null 值
     Object.keys(options).forEach(key => {
       if (options[key] === undefined || options[key] === null) {
         delete options[key];
       }
     });
-    
+
     const buffer = generateSeal(options);
     const downloadFilename = filename || `seal_${Date.now()}.png`;
-    
+
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadFilename)}"`);
     res.send(buffer);
-    
+
   } catch (error) {
     console.error('生成印章失败:', error);
     res.status(500).json({
