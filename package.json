@@ -1,0 +1,22 @@
+{
+  "name": "print-seal",
+  "version": "1.0.0",
+  "description": "印章生成器 API 服务",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.61",
+    "archiver": "^7.0.1",
+    "canvas": "^3.2.1",
+    "express": "^4.18.2",
+    "fontkit": "^2.0.4",
+    "opentype.js": "^1.3.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
