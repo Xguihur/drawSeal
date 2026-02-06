@@ -7,8 +7,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 新字体：方正大标宋简体
-const fontPath = path.join(__dirname, '../font/方正大标宋简体.TTF');
-const FONT_FAMILY = 'FangZhengDaBiaoSongJianTi';
+const fontPath = path.join(__dirname, '../font/宋体.TTC');
+// const fontPath = path.join(__dirname, '../font/方正大标宋简体.TTF');
+const FONT_FAMILY = '宋体';
 
 if (!fs.existsSync(fontPath)) {
 } else {
