@@ -806,14 +806,15 @@ function getProvinceCode(name) {
 function generateRandomCode(name) {
   const prefix = getProvinceCode(name);
   if (!prefix) {
-    throw new Error(`未找到"${name}"对应的编码`);
+    // 未匹配到省份/城市编码，返回空字符串
+    return '';
   }
   // 生成11位随机数字
   const randomPart = Array.from({ length: 11 }, () => Math.floor(Math.random() * 10)).join('');
   return prefix + randomPart;
 }
 
-module.exports = {
+export {
   provinceCodeMap,
   getProvinceCode,
   generateRandomCode,

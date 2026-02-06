@@ -27,7 +27,7 @@ app.get('/health', (req, res) => {
  */
 app.get('/api/seal', (req, res) => {
   try {
-    const { name, fontSize, size, color, borderWidth, starSize } = req.query;
+    const { name, fontSize, size, color, borderWidth, starSize, code } = req.query;
     
     if (!name) {
       return res.status(400).json({
@@ -43,6 +43,7 @@ app.get('/api/seal', (req, res) => {
       color: color ? decodeURIComponent(color) : undefined,
       borderWidth: borderWidth ? parseInt(borderWidth, 10) : undefined,
       starSize: starSize ? parseInt(starSize, 10) : undefined,
+      code: code ? decodeURIComponent(code) : undefined,
     };
     
     // 过滤掉 undefined 值
@@ -83,7 +84,7 @@ app.get('/api/seal', (req, res) => {
  */
 app.post('/api/seal', (req, res) => {
   try {
-    const { name, fontSize, size, color, borderWidth, starSize } = req.body;
+    const { name, fontSize, size, color, borderWidth, starSize, code } = req.body;
 
     if (!name) {
       return res.status(400).json({
@@ -99,6 +100,7 @@ app.post('/api/seal', (req, res) => {
       color,
       borderWidth,
       starSize,
+      code,
     };
 
     // 过滤掉 undefined 和 null 值
@@ -143,7 +145,7 @@ app.post('/api/seal', (req, res) => {
  */
 app.post('/api/seal/download', (req, res) => {
   try {
-    const { names, fontSize, size, color, borderWidth, starSize } = req.body;
+    const { names, fontSize, size, color, borderWidth, starSize, code } = req.body;
 
     // 验证 names 参数
     if (!names || !Array.isArray(names) || names.length === 0) {
@@ -160,6 +162,7 @@ app.post('/api/seal/download', (req, res) => {
       color,
       borderWidth,
       starSize,
+      code,
     };
 
     // 过滤掉 undefined 和 null 值

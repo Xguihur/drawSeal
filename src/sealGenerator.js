@@ -2,6 +2,7 @@ import { createCanvas, registerFont } from 'canvas';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { generateRandomCode } from '../utils/provinceCode.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -207,9 +208,13 @@ export function generateSeal(options) {
     color = '#f03618',
     borderWidth = 6,
     starSize = 50,
-    code = '2024010112345', // 默认编码（13位）
+    code, // 编码：用户传入则使用，未传入则根据公司名称自动生成
     codeFontSize = 14,
   } = options;
+
+  // 如果用户未传入 code，则根据公司名称自动匹配省份/城市生成编码
+  // 匹配不到时返回空字符串，底部编码区域将不显示
+  const finalCode = code !== undefined ? code : generateRandomCode(name);
 
   if (!name || typeof name !== 'string') {
     throw new Error('印章名称不能为空');
@@ -246,8 +251,8 @@ export function generateSeal(options) {
   drawTextOnArc(ctx, name, cx, cy, textRadius, scaledFontSize, color);
 
   // 4. 绘制底部编码
-  if (code) {
-    drawBottomCode(ctx, code, cx, cy, radius, codeFontSize, color);
+  if (finalCode) {
+    drawBottomCode(ctx, finalCode, cx, cy, radius, codeFontSize, color);
   }
 
   // 导出为 PNG Buffer
