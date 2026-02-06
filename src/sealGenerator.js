@@ -59,7 +59,7 @@ function drawStar(ctx, cx, cy, outerRadius, color) {
  */
 function calculateArcParams(charCount, baseFontSize) {
   // 配置参数
-  const FIXED_ARC_DEGREE = 260; // 固定弧度（度）
+  const FIXED_ARC_DEGREE = 240; // 固定弧度（度）
   const BASE_CHAR_COUNT = 12; // 基准字数，超过此值开始缩小字体
   const MIN_FONT_SCALE = 0.6; // 最小字体缩放比例
 
@@ -137,6 +137,56 @@ function drawTextOnArc(ctx, text, cx, cy, radius, fontSize, color) {
 }
 
 /**
+ * 在印章底部沿圆弧绘制编码（环形排列）
+ * @param {CanvasRenderingContext2D} ctx - Canvas 上下文
+ * @param {string} code - 编码内容
+ * @param {number} cx - 圆心 x 坐标
+ * @param {number} cy - 圆心 y 坐标
+ * @param {number} radius - 印章半径
+ * @param {number} fontSize - 字体大小
+ * @param {string} color - 颜色
+ */
+function drawBottomCode(ctx, code, cx, cy, radius, fontSize, color) {
+  if (!code) return;
+
+  const chars = code.split('');
+  const charCount = chars.length;
+  if (charCount === 0) return;
+
+  // 编码所在圆弧的半径（紧贴边框内侧）
+  const codeRadius = radius - fontSize * 1;
+
+  // 底部编码占据的总弧度（根据字符数自适应，13-14位大约80-90度）
+  const totalArcDegree = Math.min(80, charCount * 6.5);
+  const totalArc = (totalArcDegree * Math.PI) / 180;
+
+  // 起始角度：以底部中心（PI/2 即 90度）为对称中心
+  // 底部编码从左到右阅读，角度从左侧到右侧
+  const startAngle = Math.PI / 2 + totalArc / 2; // 左侧起点
+  const angleStep = charCount > 1 ? totalArc / (charCount - 1) : 0;
+
+  ctx.font = `${fontSize}px "${FONT_FAMILY}"`;
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  chars.forEach((char, index) => {
+    // 底部编码从左到右排列，角度递减（顺时针从左到右）
+    const angle = startAngle - angleStep * index;
+
+    const x = cx + codeRadius * Math.cos(angle);
+    const y = cy + codeRadius * Math.sin(angle);
+
+    ctx.save();
+    ctx.translate(x, y);
+    // 文字旋转：底部文字朝外可读，需要旋转 angle - PI/2
+    ctx.rotate(angle - Math.PI / 2);
+    ctx.fillText(char, 0, 0);
+    ctx.restore();
+  });
+}
+
+/**
  * 生成印章图片
  * @param {Object} options - 配置选项
  * @param {string} options.name - 印章名称
@@ -145,6 +195,8 @@ function drawTextOnArc(ctx, text, cx, cy, radius, fontSize, color) {
  * @param {string} [options.color='#CC0000'] - 印章颜色
  * @param {number} [options.borderWidth=6] - 边框宽度
  * @param {number} [options.starSize=50] - 五角星大小
+ * @param {string} [options.code='2024010112345'] - 底部编码（13-14位）
+ * @param {number} [options.codeFontSize=14] - 编码字体大小
  * @returns {Buffer} PNG 图片 Buffer
  */
 export function generateSeal(options) {
@@ -155,6 +207,8 @@ export function generateSeal(options) {
     color = '#f03618',
     borderWidth = 6,
     starSize = 50,
+    code = '2024010112345', // 默认编码（13位）
+    codeFontSize = 14,
   } = options;
 
   if (!name || typeof name !== 'string') {
@@ -190,6 +244,11 @@ export function generateSeal(options) {
   const textRadius = radius - fontSize * 1;
   const scaledFontSize = fontSize;
   drawTextOnArc(ctx, name, cx, cy, textRadius, scaledFontSize, color);
+
+  // 4. 绘制底部编码
+  if (code) {
+    drawBottomCode(ctx, code, cx, cy, radius, codeFontSize, color);
+  }
 
   // 导出为 PNG Buffer
   return canvas.toBuffer('image/png');
