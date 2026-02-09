@@ -1,5 +1,5 @@
 # 使用 Node.js 官方镜像（基于 Debian）
-FROM node:20-slim
+FROM docker.1ms.run/library/node:20-slim
 
 # 设置工作目录
 WORKDIR /app
