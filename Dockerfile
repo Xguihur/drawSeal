@@ -24,8 +24,9 @@ COPY package*.json ./
 # 安装依赖
 RUN npm ci --only=production
 
-# 复制源代码和字体
+# 复制源代码、工具类和字体
 COPY src/ ./src/
+COPY utils/ ./utils/
 COPY font/ ./font/
 
 # 暴露端口
