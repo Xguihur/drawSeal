@@ -7,12 +7,40 @@ import { generateRandomCode } from '../utils/provinceCode.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 新字体：方正大标宋简体
+// 印章配置常量
+const SEAL_CONFIG = {
+  // 文字弧度配置
+  FIXED_ARC_DEGREE: 240, // 固定弧度（度）
+  BASE_CHAR_COUNT: 12, // 基准字数，超过此值开始缩小字体
+  MIN_FONT_SCALE: 0.6, // 最小字体缩放比例
+  
+  // 绘制配置
+  STAR_INNER_RADIUS_RATIO: 0.382, // 五角星内半径比例（黄金比例）
+  TEXT_VERTICAL_SCALE: 1.55, // 文字垂直拉伸比例
+  
+  // 编码配置
+  CODE_MAX_ARC_DEGREE: 80, // 底部编码最大弧度（度）
+  CODE_CHAR_DEGREE: 6.5, // 每个编码字符占据的弧度（度）
+  
+  // 参数范围限制
+  MIN_SIZE: 100, // 最小印章尺寸
+  MAX_SIZE: 1000, // 最大印章尺寸
+  MIN_FONT_SIZE: 10, // 最小字体大小
+  MAX_FONT_SIZE: 100, // 最大字体大小
+  MIN_BORDER_WIDTH: 1, // 最小边框宽度
+  MAX_BORDER_WIDTH: 20, // 最大边框宽度
+  MIN_STAR_SIZE: 10, // 最小五角星大小
+  MAX_STAR_SIZE: 150, // 最大五角星大小
+};
+
+// 字体配置
 const fontPath = path.join(__dirname, '../font/宋体.TTC');
 // const fontPath = path.join(__dirname, '../font/方正大标宋简体.TTF');
 const FONT_FAMILY = '宋体';
 
+// 注册字体
 if (!fs.existsSync(fontPath)) {
+  console.warn(`字体文件不存在: ${fontPath}，将使用系统默认字体`);
 } else {
   try {
     registerFont(fontPath, { family: FONT_FAMILY });
@@ -30,7 +58,7 @@ if (!fs.existsSync(fontPath)) {
  * @param {string} color - 颜色
  */
 function drawStar(ctx, cx, cy, outerRadius, color) {
-  const innerRadius = outerRadius * 0.382; // 黄金比例
+  const innerRadius = outerRadius * SEAL_CONFIG.STAR_INNER_RADIUS_RATIO;
   const points = 5;
 
   ctx.beginPath();
@@ -59,29 +87,21 @@ function drawStar(ctx, cx, cy, outerRadius, color) {
  * @returns {Object} { totalArc, fontSize, startAngle }
  */
 function calculateArcParams(charCount, baseFontSize) {
-  // 配置参数
-  const FIXED_ARC_DEGREE = 240; // 固定弧度（度）
-  const BASE_CHAR_COUNT = 12; // 基准字数，超过此值开始缩小字体
-  const MIN_FONT_SCALE = 0.6; // 最小字体缩放比例
-
   // 转换为弧度
   const toRadian = (degree) => (degree * Math.PI) / 180;
 
-  // 使用固定弧度
-  let actualArcDegree = FIXED_ARC_DEGREE;
-
-  // 3. 计算字体缩放
+  // 计算字体缩放
   let fontScale = 1;
-  if (charCount > BASE_CHAR_COUNT) {
+  if (charCount > SEAL_CONFIG.BASE_CHAR_COUNT) {
     // 超过基准字数，字体按比例缩小
-    fontScale = BASE_CHAR_COUNT / charCount;
+    fontScale = SEAL_CONFIG.BASE_CHAR_COUNT / charCount;
     // 限制最小缩放比例
-    fontScale = Math.max(MIN_FONT_SCALE, fontScale);
+    fontScale = Math.max(SEAL_CONFIG.MIN_FONT_SCALE, fontScale);
   }
 
-  // 4. 计算起始角度（使文字居中对称分布在顶部）
+  // 计算起始角度（使文字居中对称分布在顶部）
   // 弧度的中心点在顶部（-90度 = -PI/2）
-  const totalArc = toRadian(actualArcDegree);
+  const totalArc = toRadian(SEAL_CONFIG.FIXED_ARC_DEGREE);
   const startAngle = -Math.PI / 2 - totalArc / 2; // 从左侧开始
 
   return {
@@ -130,8 +150,8 @@ function drawTextOnArc(ctx, text, cx, cy, radius, fontSize, color) {
     ctx.translate(x, y);
     // 旋转文字，使其垂直于半径方向（指向圆心）
     ctx.rotate(angle + Math.PI / 2);
-    // 字高拉伸为 155%
-    ctx.scale(1, 1.55);
+    // 字高拉伸
+    ctx.scale(1, SEAL_CONFIG.TEXT_VERTICAL_SCALE);
     ctx.fillText(char, 0, 0);
     ctx.restore();
   });
@@ -155,10 +175,13 @@ function drawBottomCode(ctx, code, cx, cy, radius, fontSize, color) {
   if (charCount === 0) return;
 
   // 编码所在圆弧的半径（紧贴边框内侧）
-  const codeRadius = radius - fontSize * 1;
+  const codeRadius = radius - fontSize;
 
-  // 底部编码占据的总弧度（根据字符数自适应，13-14位大约80-90度）
-  const totalArcDegree = Math.min(80, charCount * 6.5);
+  // 底部编码占据的总弧度（根据字符数自适应）
+  const totalArcDegree = Math.min(
+    SEAL_CONFIG.CODE_MAX_ARC_DEGREE, 
+    charCount * SEAL_CONFIG.CODE_CHAR_DEGREE
+  );
   const totalArc = (totalArcDegree * Math.PI) / 180;
 
   // 起始角度：以底部中心（PI/2 即 90度）为对称中心
@@ -193,10 +216,10 @@ function drawBottomCode(ctx, code, cx, cy, radius, fontSize, color) {
  * @param {string} options.name - 印章名称
  * @param {number} [options.fontSize=36] - 文字字号
  * @param {number} [options.size=300] - 印章尺寸（直径）
- * @param {string} [options.color='#CC0000'] - 印章颜色
+ * @param {string} [options.color='#f03618'] - 印章颜色
  * @param {number} [options.borderWidth=6] - 边框宽度
  * @param {number} [options.starSize=50] - 五角星大小
- * @param {string} [options.code='2024010112345'] - 底部编码（13-14位）
+ * @param {string} [options.code] - 底部编码（13-14位），不传则自动生成
  * @param {number} [options.codeFontSize=14] - 编码字体大小
  * @returns {Buffer} PNG 图片 Buffer
  */
@@ -208,17 +231,36 @@ export function generateSeal(options) {
     color = '#f03618',
     borderWidth = 6,
     starSize = 50,
-    code, // 编码：用户传入则使用，未传入则根据公司名称自动生成
+    code,
     codeFontSize = 14,
   } = options;
+
+  // 参数验证
+  if (!name || typeof name !== 'string') {
+    throw new Error('印章名称不能为空');
+  }
+  if (name.trim().length === 0) {
+    throw new Error('印章名称不能为空字符串');
+  }
+  if (size < SEAL_CONFIG.MIN_SIZE || size > SEAL_CONFIG.MAX_SIZE) {
+    throw new Error(`印章尺寸必须在 ${SEAL_CONFIG.MIN_SIZE}-${SEAL_CONFIG.MAX_SIZE} 之间`);
+  }
+  if (fontSize < SEAL_CONFIG.MIN_FONT_SIZE || fontSize > SEAL_CONFIG.MAX_FONT_SIZE) {
+    throw new Error(`字体大小必须在 ${SEAL_CONFIG.MIN_FONT_SIZE}-${SEAL_CONFIG.MAX_FONT_SIZE} 之间`);
+  }
+  if (borderWidth < SEAL_CONFIG.MIN_BORDER_WIDTH || borderWidth > SEAL_CONFIG.MAX_BORDER_WIDTH) {
+    throw new Error(`边框宽度必须在 ${SEAL_CONFIG.MIN_BORDER_WIDTH}-${SEAL_CONFIG.MAX_BORDER_WIDTH} 之间`);
+  }
+  if (starSize < SEAL_CONFIG.MIN_STAR_SIZE || starSize > SEAL_CONFIG.MAX_STAR_SIZE) {
+    throw new Error(`五角星大小必须在 ${SEAL_CONFIG.MIN_STAR_SIZE}-${SEAL_CONFIG.MAX_STAR_SIZE} 之间`);
+  }
+  if (codeFontSize < SEAL_CONFIG.MIN_FONT_SIZE || codeFontSize > SEAL_CONFIG.MAX_FONT_SIZE) {
+    throw new Error(`编码字体大小必须在 ${SEAL_CONFIG.MIN_FONT_SIZE}-${SEAL_CONFIG.MAX_FONT_SIZE} 之间`);
+  }
 
   // 如果用户未传入 code，则根据公司名称自动匹配省份/城市生成编码
   // 匹配不到时返回空字符串，底部编码区域将不显示
   const finalCode = code !== undefined ? code : generateRandomCode(name);
-
-  if (!name || typeof name !== 'string') {
-    throw new Error('印章名称不能为空');
-  }
 
   // 创建 Canvas，使用 2 倍尺寸以获得高清输出
   const scale = 2;
@@ -241,14 +283,12 @@ export function generateSeal(options) {
   ctx.stroke();
 
   // 2. 绘制中心五角星
-  const scaledStarSize = starSize;
-  drawStar(ctx, cx, cy, scaledStarSize, color);
+  drawStar(ctx, cx, cy, starSize, color);
 
   // 3. 绘制环形文字
   // 文字半径略小于边框，留出内边距
-  const textRadius = radius - fontSize * 1;
-  const scaledFontSize = fontSize;
-  drawTextOnArc(ctx, name, cx, cy, textRadius, scaledFontSize, color);
+  const textRadius = radius - fontSize;
+  drawTextOnArc(ctx, name, cx, cy, textRadius, fontSize, color);
 
   // 4. 绘制底部编码
   if (finalCode) {
@@ -265,6 +305,10 @@ export function generateSeal(options) {
  * @returns {string} Base64 编码的 PNG 图片
  */
 export function generateSealBase64(options) {
-  const buffer = generateSeal(options);
-  return buffer.toString('base64');
+  try {
+    const buffer = generateSeal(options);
+    return buffer.toString('base64');
+  } catch (err) {
+    throw new Error(`生成印章 Base64 失败: ${err.message}`);
+  }
 }
