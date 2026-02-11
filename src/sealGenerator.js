@@ -34,8 +34,8 @@ const SEAL_CONFIG = {
 };
 
 // 字体配置
-const fontPath = path.join(__dirname, '../font/宋体.TTC');
-// const fontPath = path.join(__dirname, '../font/方正大标宋简体.TTF');
+const fontPath = path.join(__dirname, '../font/宋体.ttc');
+// const fontPath = path.join(__dirname, '../font/方正大标宋简体.ttf');
 const FONT_FAMILY = '宋体';
 
 // 注册字体
