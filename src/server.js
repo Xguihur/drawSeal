@@ -1,6 +1,7 @@
 import express from 'express';
 import archiver from 'archiver';
 import { generateSeal, generateSealBase64 } from './sealGenerator.js';
+import { rateLimiter, getQueueStatus } from './middleware/rateLimiter.js';
 
 const app = express();
 const PORT = process.env.PORT || 3301;
@@ -8,10 +9,13 @@ const PORT = process.env.PORT || 3301;
 // 解析 JSON 请求体
 app.use(express.json());
 
-// 健康检查
+// 健康检查（附带队列状态，方便观察限流情况）
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: '印章生成服务运行中' });
+  res.json({ status: 'ok', message: '印章生成服务运行中', queue: getQueueStatus() });
 });
+
+// 对所有印章接口启用限流
+app.use('/api/seal', rateLimiter);
 
 /**
  * GET /api/seal

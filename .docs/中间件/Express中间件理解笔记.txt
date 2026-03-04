@@ -1,0 +1,171 @@
+# Express 中间件理解笔记
+
+---
+
+## 一、它本质上是什么？
+
+**一句话**：中间件就是“和路由回调长得一模一样的函数”，只不过它**通常不直接结束请求，而是决定要不要交给下一个处理者（next）**。
+
+```js
+// 普通路由处理函数
+app.get('/api/seal', (req, res) => {
+  // 直接处理并结束请求
+  res.send('result');
+});
+
+// 中间件函数（形状一模一样，多了 next）
+app.use((req, res, next) => {
+  // 这里也可以直接结束请求
+  // 也可以做一些事情后，交给下一个：
+  next();
+});
+```
+
+**对比表**：
+
+| 类型       | 形状                    | 谁来结束请求？             |
+|------------|-------------------------|----------------------------|
+| 路由回调   | `(req, res)`            | 自己：`res.send()/json()`  |
+| 中间件     | `(req, res, next)`      | 自己**或**下一个（`next()`）|
+
+---
+
+## 二、执行链长什么样？
+
+假设你写了：
+
+```js
+app.use('/api/seal', rateLimiter);
+
+app.get('/api/seal', handlerGetSeal);
+app.post('/api/seal', handlerPostSeal);
+app.post('/api/seal/download', handlerBatchDownload);
+```
+
+对于 `GET /api/seal` 这次请求，实际执行顺序是：
+
+```text
+请求进来
+  ↓
+rateLimiter(req, res, next)
+  ↓ （调用 next()）
+handlerGetSeal(req, res)
+  ↓
+返回响应
+```
+
+**整体结构图**：
+
+```text
+客户端请求
+   ↓
+[ rateLimiter 中间件 ]  —— 决定：
+     ├── 直接 res.xxx() 结束（例如 503）
+     └── 调用 next() 交给下一个
+             ↓
+     [ 具体路由处理函数 handler ]
+             ↓
+           发送响应
+```
+
+**关键点**：中间件和路由处理函数其实是“同一条链”上的节点，只是：
+- 中间件**通常不直接结束**，而是调用 `next()` 把机会让给后面；
+- 最后一个路由处理函数**通常会结束请求**（`res.send/json`）。
+
+---
+
+## 三、两种挂载方式：app.use vs 路由参数
+
+### 3.1 `app.use`：批量匹配某个路径前缀
+
+```js
+// 对所有 /api/seal 开头的请求启用限流
+app.use('/api/seal', rateLimiter);
+
+app.get('/api/seal', handlerGetSeal);
+app.post('/api/seal', handlerPostSeal);
+app.post('/api/seal/download', handlerBatchDownload);
+```
+
+等价于：
+
+```js
+app.get('/api/seal', rateLimiter, handlerGetSeal);
+app.post('/api/seal', rateLimiter, handlerPostSeal);
+app.post('/api/seal/download', rateLimiter, handlerBatchDownload);
+```
+
+**对比表**：
+
+| 写法                     | 作用范围                          |
+|--------------------------|-----------------------------------|
+| `app.use('/api/seal', m)`| 这一行**后面所有** `/api/seal*` 路由 |
+| `app.get('/x', m, h)`    | 仅这一条 `/x` 路由                |
+
+### 3.2 在单个路由上直接写中间件
+
+```js
+function auth(req, res, next) { /* ... */ }
+
+app.get('/profile', auth, (req, res) => {
+  res.send('user profile');
+});
+```
+
+执行顺序：
+
+```text
+/profile 请求
+  ↓
+auth(req, res, next)
+  ↓ （通过）
+路由处理函数(req, res)
+  ↓
+返回响应
+```
+
+---
+
+## 四、和“回调函数”对上号
+
+你现在的理解可以总结成：
+
+> **中间件 = 和每个接口回调一模一样的函数，只不过：**
+> - 回调函数通常是「最后一站」，直接 `return 结果`；
+> - 中间件通常是「中途一站」，做点事情后 `return next()`，再交给后面的回调。
+
+对比表：
+
+| 角色           | 函数签名           | 典型职责                     | 什么时候结束请求？             |
+|----------------|--------------------|------------------------------|--------------------------------|
+| 普通路由回调   | `(req, res)`       | 具体业务逻辑（生成印章等）   | 自己：`res.send/json/end`     |
+| 中间件         | `(req, res, next)` | 日志、鉴权、限流、解析参数等 | 可以自己结束，也可以 `next()` |
+
+---
+
+## 五、和当前项目对应起来
+
+你现在项目中的写法：
+
+```js
+app.use('/api/seal', rateLimiter);
+
+app.get('/api/seal', ...);
+app.post('/api/seal', ...);
+app.post('/api/seal/download', ...);
+```
+
+所有这三个路由在执行前，都会先经过 `rateLimiter`：
+
+```text
+/api/seal           → rateLimiter → GET /api/seal  的处理函数
+/api/seal           → rateLimiter → POST /api/seal 的处理函数
+/api/seal/download  → rateLimiter → POST /api/seal/download 的处理函数
+```
+
+总结成一句话：
+
+> 中间件就是「插在所有路由前/中间的回调函数」，
+> 你可以在这里**统一做一些事（限流、鉴权、日志）**，
+> 然后决定是**提前结束请求**，还是**把机会交给下一个处理函数（next）**。
+
